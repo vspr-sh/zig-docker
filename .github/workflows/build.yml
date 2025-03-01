@@ -1,0 +1,33 @@
+name: Build images
+
+on: 
+  push: 
+  workflow_dispatch:
+
+permissions:
+    packages: write
+    contents: read
+
+jobs:
+  build:
+    name: Build image
+    runs-on: ubuntu-20.04
+    steps: 
+      - uses: actions/checkout@v4
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/metadata-action@v5
+        id: image-metadata
+        with: 
+          images: ghcr.io/vspr-sh/docker-zig
+          tags: |
+            type=raw,value=latest
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v5
+        with:
+          push: true
+          platforms: linux/amd64
+          tags: ${{ steps.image-metadata.outputs.tags }}
